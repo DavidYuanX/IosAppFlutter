@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/order.dart' as order_model;
 import '../models/product.dart';
 import '../models/user.dart';
 
@@ -22,6 +23,7 @@ class ApiService {
   String get _usersBaseUrl => '$_baseHost/api/users';
   String get _authBaseUrl => '$_baseHost/api/auth';
   String get _productsBaseUrl => '$_baseHost/api/products';
+  String get _ordersBaseUrl => '$_baseHost/api/orders';
 
   static const _tokenKey = 'auth_token';
 
@@ -228,6 +230,54 @@ class ApiService {
     );
     final result = await _performRequest(uri) as List<dynamic>;
     return result.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  // ---- Orders ----
+
+  Future<order_model.Order> createOrder(List<order_model.OrderItem> items) async {
+    final uri = Uri.parse(_ordersBaseUrl);
+    final result = await _performRequest(
+      uri,
+      method: 'POST',
+      body: {
+        'items': items.map((e) => e.toJson()).toList(),
+      },
+    ) as Map<String, dynamic>;
+    return order_model.Order.fromJson(result);
+  }
+
+  Future<List<order_model.Order>> fetchOrders({String? status}) async {
+    final params = <String, String>{};
+    if (status != null && status.isNotEmpty) {
+      params['status'] = status;
+    }
+    final uri = Uri.parse(_ordersBaseUrl)
+        .replace(queryParameters: params.isEmpty ? null : params);
+    final result = await _performRequest(uri) as List<dynamic>;
+    return result
+        .map((e) => order_model.Order.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<order_model.Order> fetchOrder(int id) async {
+    final uri = Uri.parse('$_ordersBaseUrl/$id');
+    final result = await _performRequest(uri) as Map<String, dynamic>;
+    return order_model.Order.fromJson(result);
+  }
+
+  Future<order_model.Order> updateOrderStatus(int id, String status) async {
+    final uri = Uri.parse('$_ordersBaseUrl/$id/status');
+    final result = await _performRequest(
+      uri,
+      method: 'PUT',
+      body: {'status': status},
+    ) as Map<String, dynamic>;
+    return order_model.Order.fromJson(result);
+  }
+
+  Future<void> cancelOrder(int id) async {
+    final uri = Uri.parse('$_ordersBaseUrl/$id');
+    await _performRequest(uri, method: 'DELETE', decodeJson: false);
   }
 }
 

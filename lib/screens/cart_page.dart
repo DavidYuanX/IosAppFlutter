@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../models/order.dart' as order_model;
+import '../services/api_service.dart';
 import '../services/cart_service.dart';
+import 'order_detail_page.dart';
 
 class CartPage extends StatelessWidget {
   const CartPage({super.key});
@@ -197,24 +200,47 @@ class CartPage extends StatelessWidget {
   }
 
   void _checkout(BuildContext context) {
+    final cart = CartService.instance;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('提示'),
+        title: const Text('确认下单'),
         content: Text(
-            '订单总额 ¥${CartService.instance.totalPrice.toStringAsFixed(0)}，确认下单？'),
+            '共 ${cart.totalCount} 件商品，合计 ¥${cart.totalPrice.toStringAsFixed(0)}，确认提交订单？'),
         actions: [
           TextButton(
               child: const Text('取消'),
               onPressed: () => Navigator.of(context).pop()),
           FilledButton(
-            child: const Text('确认'),
-            onPressed: () {
-              CartService.instance.clear();
+            child: const Text('提交订单'),
+            onPressed: () async {
               Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('下单成功！')),
-              );
+              try {
+                final items = cart.items
+                    .map((e) => order_model.OrderItem(
+                          productId: e.product.id,
+                          productName: e.product.name,
+                          productImage: e.product.imageUrl,
+                          price: e.product.price,
+                          quantity: e.quantity,
+                        ))
+                    .toList();
+                final order = await ApiService.instance.createOrder(items);
+                cart.clear();
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('下单成功！')),
+                );
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => OrderDetailPage(orderId: order.id!)),
+                );
+              } catch (e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('下单失败: $e')),
+                );
+              }
             },
           ),
         ],
