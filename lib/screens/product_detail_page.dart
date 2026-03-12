@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../models/order.dart' as order_model;
 import '../models/product.dart';
+import '../services/api_service.dart';
 import '../services/cart_service.dart';
+import 'order_detail_page.dart';
 
 class ProductDetailPage extends StatelessWidget {
   final Product product;
@@ -178,13 +181,36 @@ class ProductDetailPage extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: FilledButton(
-                  onPressed: () {
-                    CartService.instance.addProduct(product);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('已加入购物车，请前往购物车结算'),
-                          duration: Duration(seconds: 1)),
-                    );
+                  onPressed: () async {
+                    try {
+                      final items = [
+                        order_model.OrderItem(
+                          productId: product.id,
+                          productName: product.name,
+                          productImage: product.imageUrl,
+                          price: product.price,
+                          quantity: 1,
+                        ),
+                      ];
+                      final order =
+                          await ApiService.instance.createOrder(items);
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('下单成功'),
+                            duration: Duration(seconds: 1)),
+                      );
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (_) =>
+                                OrderDetailPage(orderId: order.id!)),
+                      );
+                    } catch (e) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('下单失败: $e')),
+                      );
+                    }
                   },
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(0, 48),
