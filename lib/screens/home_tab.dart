@@ -31,7 +31,10 @@ class _HomeTabState extends State<HomeTab> {
 
   void _autoScroll() {
     Future.delayed(const Duration(seconds: 4), () {
-      if (!mounted) return;
+      if (!mounted || !_pageController.hasClients) {
+        _autoScroll();
+        return;
+      }
       final next = (_currentBanner + 1) % _banners.length;
       _pageController.animateToPage(
         next,
