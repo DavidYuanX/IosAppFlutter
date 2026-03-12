@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'screens/login_page.dart';
-import 'screens/user_list_page.dart';
+import 'screens/main_shell.dart';
 import 'services/api_service.dart';
 
 void main() {
@@ -15,9 +15,13 @@ class CrudApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CRUD App',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.light,
+        ),
       ),
       home: FutureBuilder<bool>(
         future: ApiService.instance.isLoggedIn(),
@@ -29,7 +33,7 @@ class CrudApp extends StatelessWidget {
           }
           final loggedIn = snapshot.data ?? false;
           if (loggedIn) {
-            return const UserListPage();
+            return const MainShell();
           } else {
             return const LoginPage();
           }

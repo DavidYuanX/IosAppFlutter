@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/product.dart';
 import '../models/user.dart';
 
 class ApiError implements Exception {
@@ -20,6 +21,7 @@ class ApiService {
   final String _baseHost = 'http://192.168.22.58:8080';
   String get _usersBaseUrl => '$_baseHost/api/users';
   String get _authBaseUrl => '$_baseHost/api/auth';
+  String get _productsBaseUrl => '$_baseHost/api/products';
 
   static const _tokenKey = 'auth_token';
 
@@ -167,6 +169,65 @@ class ApiService {
   Future<void> deleteUser(int id) async {
     final uri = Uri.parse('$_usersBaseUrl/$id');
     await _performRequest(uri, method: 'DELETE', decodeJson: false);
+  }
+
+  // ---- Products ----
+
+  Future<List<Product>> fetchProducts({String? category}) async {
+    final params = <String, String>{};
+    if (category != null && category.isNotEmpty) {
+      params['category'] = category;
+    }
+    final uri = Uri.parse(_productsBaseUrl).replace(queryParameters: params.isEmpty ? null : params);
+    final result = await _performRequest(uri) as List<dynamic>;
+    return result.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<Product?> fetchProduct(int id) async {
+    final uri = Uri.parse('$_productsBaseUrl/$id');
+    final result = await _performRequest(uri) as Map<String, dynamic>;
+    return Product.fromJson(result);
+  }
+
+  Future<List<String>> fetchProductCategories() async {
+    final uri = Uri.parse('$_productsBaseUrl/categories');
+    final result = await _performRequest(uri) as List<dynamic>;
+    return result.cast<String>();
+  }
+
+  Future<Product> createProduct(Product product) async {
+    final uri = Uri.parse(_productsBaseUrl);
+    final result = await _performRequest(
+      uri,
+      method: 'POST',
+      body: product.toJson(),
+    ) as Map<String, dynamic>;
+    return Product.fromJson(result);
+  }
+
+  Future<Product> updateProduct(Product product) async {
+    final id = product.id;
+    if (id == null) throw ApiError('商品 ID 为空');
+    final uri = Uri.parse('$_productsBaseUrl/$id');
+    final result = await _performRequest(
+      uri,
+      method: 'PUT',
+      body: product.toJson(),
+    ) as Map<String, dynamic>;
+    return Product.fromJson(result);
+  }
+
+  Future<void> deleteProduct(int id) async {
+    final uri = Uri.parse('$_productsBaseUrl/$id');
+    await _performRequest(uri, method: 'DELETE', decodeJson: false);
+  }
+
+  Future<List<Product>> searchProducts(String keyword) async {
+    final uri = Uri.parse('$_productsBaseUrl/search').replace(
+      queryParameters: {'keyword': keyword},
+    );
+    final result = await _performRequest(uri) as List<dynamic>;
+    return result.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
   }
 }
 
