@@ -142,18 +142,30 @@ class _HomeTabState extends State<HomeTab> {
       Icons.fitness_center,
       Icons.menu_book,
     ];
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 6,
-          childAspectRatio: 0.8,
+          crossAxisCount: 4,
+          childAspectRatio: 0.9,
+          crossAxisSpacing: 8,
         ),
         itemCount: categories.length,
         itemBuilder: (context, index) {
-          return GestureDetector(
+          final icon = icons[index % icons.length];
+          final color = [
+            Colors.blue,
+            Colors.pink,
+            Colors.deepOrange,
+            Colors.teal,
+            Colors.indigo,
+            Colors.purple,
+          ][index % 6];
+          return InkWell(
+            borderRadius: BorderRadius.circular(14),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                   builder: (_) =>
@@ -162,18 +174,25 @@ class _HomeTabState extends State<HomeTab> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor:
-                      Theme.of(context).colorScheme.primaryContainer,
-                  child: Icon(icons[index % icons.length],
-                      size: 22,
-                      color:
-                          Theme.of(context).colorScheme.onPrimaryContainer),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, size: 24, color: color),
                 ),
                 const SizedBox(height: 6),
-                Text(categories[index],
-                    style: const TextStyle(fontSize: 12)),
+                Text(
+                  categories[index],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
               ],
             ),
           );

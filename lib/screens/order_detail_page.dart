@@ -452,74 +452,63 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildActions(Order order) {
-    final actions = <Widget>[];
-
     switch (order.status) {
       case '待付款':
-        actions.addAll([
-          Expanded(
-            child: OutlinedButton(
-              onPressed: _cancelOrder,
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(0, 48),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24)),
+        return Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _cancelOrder,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, 48),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24)),
+                ),
+                child: const Text('取消订单', style: TextStyle(fontSize: 15)),
               ),
-              child:
-                  const Text('取消订单', style: TextStyle(fontSize: 15)),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: FilledButton(
-              onPressed: () => _updateStatus('待发货'),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(0, 48),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton(
+                onPressed: () => _updateStatus('待发货'),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, 48),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24)),
+                ),
+                child: const Text('立即付款', style: TextStyle(fontSize: 15)),
               ),
-              child: const Text('立即付款', style: TextStyle(fontSize: 15)),
             ),
-          ),
-        ]);
-        break;
+          ],
+        );
       case '待发货':
-        actions.add(
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: _cancelOrder,
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(0, 48),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24)),
-              ),
-              child:
-                  const Text('取消订单', style: TextStyle(fontSize: 15)),
+        return SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: _cancelOrder,
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 48),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24)),
             ),
+            child: const Text('取消订单', style: TextStyle(fontSize: 15)),
           ),
         );
-        break;
       case '待收货':
-        actions.add(
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: () => _updateStatus('已完成'),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(0, 48),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24)),
-              ),
-              child:
-                  const Text('确认收货', style: TextStyle(fontSize: 15)),
+        return SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: () => _updateStatus('已完成'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(0, 48),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24)),
             ),
+            child: const Text('确认收货', style: TextStyle(fontSize: 15)),
           ),
         );
-        break;
+      default:
+        return const SizedBox.shrink();
     }
-
-    if (actions.isEmpty) return const SizedBox.shrink();
-    return Row(children: actions);
   }
 }

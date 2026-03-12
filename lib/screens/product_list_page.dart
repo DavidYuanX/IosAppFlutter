@@ -13,84 +13,95 @@ class ProductListPage extends StatefulWidget {
 }
 
 class _ProductListPageState extends State<ProductListPage> {
-  String? _selectedCategory;
-
   @override
-  void initState() {
-    super.initState();
-    _selectedCategory = widget.category;
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<String>>(
+      future: ProductService.instance.fetchCategories(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final categories = snapshot.data ?? [];
+        final tabs = ['全部', ...categories];
+
+        int initialIndex = 0;
+        if (widget.category != null) {
+          final idx = tabs.indexOf(widget.category!);
+          if (idx != -1) {
+            initialIndex = idx;
+          }
+        }
+
+        return DefaultTabController(
+          length: tabs.length,
+          initialIndex: initialIndex,
+          child: Builder(
+            builder: (context) {
+              return Scaffold(
+                appBar: AppBar(
+                  title: const Text('商品分类'),
+                  bottom: TabBar(
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
+                    padding: EdgeInsets.zero,
+                    labelPadding:
+                        const EdgeInsets.symmetric(horizontal: 14),
+                    labelStyle: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w600),
+                    unselectedLabelStyle: const TextStyle(fontSize: 14),
+                    indicatorSize: TabBarIndicatorSize.label,
+                    dividerColor: Colors.transparent,
+                    tabs: tabs.map((t) => Tab(text: t)).toList(),
+                  ),
+                ),
+                body: TabBarView(
+                  children: tabs.map((t) {
+                    final category = t == '全部' ? null : t;
+                    return _ProductGridView(category: category);
+                  }).toList(),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
   }
+}
+
+class _ProductGridView extends StatelessWidget {
+  final String? category;
+  const _ProductGridView({this.category});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_selectedCategory ?? '全部商品'),
-      ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 44,
-            child: FutureBuilder<List<String>>(
-              future: ProductService.instance.fetchCategories(),
-              builder: (context, snap) {
-                final categories = snap.data ?? [];
-                return ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  children: [
-                    _buildChip(null, '全部'),
-                    ...categories.map((c) => _buildChip(c, c)),
-                  ],
-                );
-              },
-            ),
+    return FutureBuilder<List<Product>>(
+      future: ProductService.instance.fetchProducts(category: category),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final products = snapshot.data!;
+        if (products.isEmpty) {
+          return const Center(child: Text('暂无商品'));
+        }
+        return GridView.builder(
+          padding: const EdgeInsets.all(12),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.68,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
           ),
-          const Divider(height: 1),
-          Expanded(
-            child: FutureBuilder<List<Product>>(
-              future: ProductService.instance
-                  .fetchProducts(category: _selectedCategory),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final products = snapshot.data!;
-                if (products.isEmpty) {
-                  return const Center(child: Text('暂无商品'));
-                }
-                return GridView.builder(
-                  padding: const EdgeInsets.all(12),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.68,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                  ),
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    final product = products[index];
-                    return _ProductGridCard(product: product);
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChip(String? value, String label) {
-    final selected = _selectedCategory == value;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) => setState(() => _selectedCategory = value),
-      ),
+          itemCount: products.length,
+          itemBuilder: (context, index) {
+            final product = products[index];
+            return _ProductGridCard(product: product);
+          },
+        );
+      },
     );
   }
 }
