@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/api_config.dart';
 import '../models/order.dart' as order_model;
 import '../models/product.dart';
 import '../models/user.dart';
@@ -19,7 +20,7 @@ class ApiService {
   ApiService._internal();
   static final ApiService instance = ApiService._internal();
 
-  final String _baseHost = 'http://192.168.22.58:8080';
+  final String _baseHost = ApiConfig.baseUrl;
   String get _usersBaseUrl => '$_baseHost/api/users';
   String get _authBaseUrl => '$_baseHost/api/auth';
   String get _productsBaseUrl => '$_baseHost/api/products';
