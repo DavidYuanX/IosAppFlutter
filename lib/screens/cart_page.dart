@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/order.dart' as order_model;
 import '../services/api_service.dart';
 import '../services/cart_service.dart';
+import 'login_page.dart';
 import 'order_detail_page.dart';
 
 class CartPage extends StatelessWidget {
@@ -218,7 +219,36 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  void _checkout(BuildContext context) {
+  void _checkout(BuildContext context) async {
+    // 检查是否登录
+    final loggedIn = await ApiService.instance.isLoggedIn();
+    if (!loggedIn) {
+      if (!context.mounted) return;
+      final shouldLogin = await showDialog<bool>(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('请先登录'),
+          content: const Text('结算需要登录账号，是否立即登录？'),
+          actions: [
+            TextButton(
+                child: const Text('取消'),
+                onPressed: () => Navigator.of(context).pop(false)),
+            FilledButton(
+                child: const Text('去登录'),
+                onPressed: () => Navigator.of(context).pop(true)),
+          ],
+        ),
+      );
+      if (shouldLogin == true && context.mounted) {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const LoginPage()),
+        );
+      }
+      return;
+    }
+
+    if (!context.mounted) return;
+
     final cart = CartService.instance;
     showDialog(
       context: context,

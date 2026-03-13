@@ -4,6 +4,8 @@ import '../models/order.dart' as order_model;
 import '../models/product.dart';
 import '../services/api_service.dart';
 import '../services/cart_service.dart';
+import 'login_page.dart';
+import 'main_shell.dart';
 import 'order_detail_page.dart';
 
 class ProductDetailPage extends StatelessWidget {
@@ -154,7 +156,10 @@ class ProductDetailPage extends StatelessWidget {
                         label: Text('$count'),
                         child: IconButton(
                           icon: const Icon(Icons.shopping_cart_outlined),
-                          onPressed: () => Navigator.of(context).pop(),
+                          onPressed: () => Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (_) => const MainShell(initialIndex: 2)),
+                            (route) => false,
+                          ),
                         ),
                       );
                     },
@@ -164,7 +169,8 @@ class ProductDetailPage extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton.tonal(
-                  onPressed: () {
+                  onPressed: () async {
+                    // 加入购物车不需要登录，直接添加
                     CartService.instance.addProduct(product);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -182,6 +188,34 @@ class ProductDetailPage extends StatelessWidget {
               Expanded(
                 child: FilledButton(
                   onPressed: () async {
+                    // 检查是否登录
+                    final loggedIn = await ApiService.instance.isLoggedIn();
+                    if (!loggedIn) {
+                      if (!context.mounted) return;
+                      final shouldLogin = await showDialog<bool>(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: const Text('请先登录'),
+                          content: const Text('购买需要登录账号，是否立即登录？'),
+                          actions: [
+                            TextButton(
+                                child: const Text('取消'),
+                                onPressed: () => Navigator.of(context).pop(false)),
+                            FilledButton(
+                                child: const Text('去登录'),
+                                onPressed: () => Navigator.of(context).pop(true)),
+                          ],
+                        ),
+                      );
+                      if (shouldLogin == true && context.mounted) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const LoginPage()),
+                        );
+                      }
+                      return;
+                    }
+
+                    if (!context.mounted) return;
                     try {
                       final items = [
                         order_model.OrderItem(

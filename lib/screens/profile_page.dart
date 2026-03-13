@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/api_service.dart';
-import 'login_page.dart';
+import 'main_shell.dart';
 import 'order_list_page.dart';
 import 'product_manage_page.dart';
 import 'user_list_page.dart';
@@ -413,7 +413,7 @@ class ProfilePage extends StatelessWidget {
     await ApiService.instance.logout();
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
+      MaterialPageRoute(builder: (_) => const MainShell()),
       (route) => false,
     );
   }
