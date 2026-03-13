@@ -26,23 +26,40 @@ class ApiService {
   String get _ordersBaseUrl => '$_baseHost/api/orders';
 
   static const _tokenKey = 'auth_token';
+  static const _usernameKey = 'auth_username';
+  static const _roleKey = 'auth_role';
 
   String? _token;
+  String? _username;
+  String? _role;
 
   Future<void> _loadToken() async {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString(_tokenKey);
+    _username = prefs.getString(_usernameKey);
+    _role = prefs.getString(_roleKey);
   }
 
-  Future<void> _saveToken(String? token) async {
+  Future<void> _saveAuth(String? token, [String? username, String? role]) async {
     final prefs = await SharedPreferences.getInstance();
     if (token == null) {
       await prefs.remove(_tokenKey);
+      await prefs.remove(_usernameKey);
+      await prefs.remove(_roleKey);
     } else {
       await prefs.setString(_tokenKey, token);
+      if (username != null) await prefs.setString(_usernameKey, username);
+      if (role != null) await prefs.setString(_roleKey, role);
     }
     _token = token;
+    _username = username ?? _username;
+    _role = role ?? _role;
   }
+
+  String? get currentUsername => _username;
+  String? get currentRole => _role;
+
+  bool get isAdmin => _role == 'ADMIN';
 
   Future<bool> isLoggedIn() async {
     if (_token == null) {
@@ -52,7 +69,7 @@ class ApiService {
   }
 
   Future<void> logout() async {
-    await _saveToken(null);
+    await _saveAuth(null);
   }
 
   Future<Map<String, String>> _headers({bool useAuth = true}) async {
@@ -129,7 +146,29 @@ class ApiService {
     if (token == null) {
       throw ApiError('登录返回数据异常');
     }
-    await _saveToken(token);
+    final role = result['role'] as String? ?? 'USER';
+    await _saveAuth(token, username, role);
+  }
+
+  Future<void> register(String username, String password, String phone) async {
+    final uri = Uri.parse('$_authBaseUrl/register');
+    final result = await _performRequest(
+      uri,
+      method: 'POST',
+      body: {
+        'username': username,
+        'password': password,
+        'phone': phone,
+      },
+      useAuth: false,
+    ) as Map<String, dynamic>;
+
+    final token = result['token'] as String?;
+    if (token == null) {
+      throw ApiError('注册返回数据异常');
+    }
+    final role = result['role'] as String? ?? 'USER';
+    await _saveAuth(token, username, role);
   }
 
   Future<List<User>> fetchUsers() async {
@@ -171,6 +210,16 @@ class ApiService {
   Future<void> deleteUser(int id) async {
     final uri = Uri.parse('$_usersBaseUrl/$id');
     await _performRequest(uri, method: 'DELETE', decodeJson: false);
+  }
+
+  Future<User> updateUserRole(int id, String role) async {
+    final uri = Uri.parse('$_usersBaseUrl/$id/role');
+    final result = await _performRequest(
+      uri,
+      method: 'PUT',
+      body: {'role': role},
+    ) as Map<String, dynamic>;
+    return User.fromJson(result);
   }
 
   // ---- Products ----

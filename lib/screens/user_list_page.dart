@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../models/user.dart';
 import '../services/api_service.dart';
-import 'login_page.dart';
-import 'user_detail_page.dart';
 
 class UserListPage extends StatefulWidget {
   const UserListPage({super.key});
@@ -25,15 +23,6 @@ class _UserListPageState extends State<UserListPage> {
     setState(() {
       _futureUsers = ApiService.instance.fetchUsers();
     });
-  }
-
-  Future<void> _logout() async {
-    await ApiService.instance.logout();
-    if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-      (route) => false,
-    );
   }
 
   Future<void> _deleteUser(User user) async {
@@ -62,21 +51,14 @@ class _UserListPageState extends State<UserListPage> {
     );
   }
 
-  void _openAddUser() async {
-    final result = await Navigator.of(context).push<User?>(
-      MaterialPageRoute(builder: (_) => const UserDetailPage()),
-    );
-    if (result != null && mounted) {
-      _reload();
-    }
-  }
-
-  void _openEditUser(User user) async {
-    final result = await Navigator.of(context).push<User?>(
-      MaterialPageRoute(builder: (_) => UserDetailPage(user: user)),
-    );
-    if (result != null && mounted) {
-      _reload();
+  Future<void> _changeRole(User user) async {
+    if (user.id == null) return;
+    final newRole = user.role == 'ADMIN' ? 'USER' : 'ADMIN';
+    try {
+      await ApiService.instance.updateUserRole(user.id!, newRole);
+      await _reload();
+    } catch (e) {
+      _showError('修改失败: $e');
     }
   }
 
@@ -84,18 +66,7 @@ class _UserListPageState extends State<UserListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Users'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-            tooltip: '退出',
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openAddUser,
-        child: const Icon(Icons.add),
+        title: const Text('用户管理'),
       ),
       body: RefreshIndicator(
         onRefresh: _reload,
@@ -103,38 +74,15 @@ class _UserListPageState extends State<UserListPage> {
           future: _futureUsers,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return ListView(
-                children: const [
-                  SizedBox(
-                    height: 200,
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                ],
-              );
+              return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return ListView(
-                children: [
-                  SizedBox(
-                    height: 200,
-                    child: Center(
-                      child: Text('加载失败: ${snapshot.error}'),
-                    ),
-                  ),
-                ],
-              );
+              return Center(child: Text('加载失败: ${snapshot.error}'));
             }
 
             final users = snapshot.data ?? [];
             if (users.isEmpty) {
-              return ListView(
-                children: const [
-                  SizedBox(
-                    height: 200,
-                    child: Center(child: Text('暂无用户')),
-                  ),
-                ],
-              );
+              return const Center(child: Text('暂无用户'));
             }
 
             return ListView.separated(
@@ -142,46 +90,56 @@ class _UserListPageState extends State<UserListPage> {
               separatorBuilder: (_, __) => const Divider(height: 0),
               itemBuilder: (context, index) {
                 final user = users[index];
-                return Dismissible(
-                  key: ValueKey(user.id ?? user.email),
-                  background: Container(
-                    color: Colors.red,
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: const Icon(Icons.delete, color: Colors.white),
+                final isAdmin = user.isAdmin;
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: isAdmin ? Colors.red : Colors.blue,
+                    child: Icon(
+                      isAdmin ? Icons.admin_panel_settings : Icons.person,
+                      color: Colors.white,
+                    ),
                   ),
-                  direction: DismissDirection.endToStart,
-                  confirmDismiss: (_) async {
-                    final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (_) => AlertDialog(
-                            title: const Text('确认删除'),
-                            content: Text('确定要删除用户 ${user.name} 吗？'),
-                            actions: [
-                              TextButton(
-                                child: const Text('取消'),
-                                onPressed: () =>
-                                    Navigator.of(context).pop(false),
-                              ),
-                              TextButton(
-                                child: const Text('删除'),
-                                onPressed: () =>
-                                    Navigator.of(context).pop(true),
-                              ),
-                            ],
+                  title: Text(user.username ?? '未知'),
+                  subtitle: Text(isAdmin ? '管理员' : '普通用户'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextButton(
+                        onPressed: () => _changeRole(user),
+                        child: Text(
+                          isAdmin ? '设为普通用户' : '设为管理员',
+                          style: TextStyle(
+                            color: isAdmin ? Colors.orange : Colors.green,
                           ),
-                        ) ??
-                        false;
-                    if (confirm) {
-                      await _deleteUser(user);
-                    }
-                    return false;
-                  },
-                  child: ListTile(
-                    title: Text(user.name),
-                    subtitle: Text('${user.email}\n${user.phone ?? ''}'),
-                    isThreeLine: true,
-                    onTap: () => _openEditUser(user),
+                        ),
+                      ),
+                      if (user.username != 'admin')
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, color: Colors.red),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text('确认删除'),
+                                content: Text('确定要删除用户 ${user.username} 吗？'),
+                                actions: [
+                                  TextButton(
+                                    child: const Text('取消'),
+                                    onPressed: () => Navigator.of(context).pop(false),
+                                  ),
+                                  TextButton(
+                                    child: const Text('删除', style: TextStyle(color: Colors.red)),
+                                    onPressed: () => Navigator.of(context).pop(true),
+                                  ),
+                                ],
+                              ),
+                            ) ?? false;
+                            if (confirm) {
+                              await _deleteUser(user);
+                            }
+                          },
+                        ),
+                    ],
                   ),
                 );
               },

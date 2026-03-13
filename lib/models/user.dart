@@ -1,21 +1,24 @@
 class User {
   final int? id;
-  String name;
-  String email;
-  String? phone;
+  final String? username;
+  final String? role;
+  final String? email;
+  final String? phone;
 
   User({
     this.id,
-    required this.name,
-    required this.email,
+    this.username,
+    this.role,
+    this.email,
     this.phone,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] as int?,
-      name: json['name'] as String? ?? '',
-      email: json['email'] as String? ?? '',
+      username: json['username'] as String?,
+      role: json['role'] as String?,
+      email: json['email'] as String?,
       phone: json['phone'] as String?,
     );
   }
@@ -23,10 +26,12 @@ class User {
   Map<String, dynamic> toJson() {
     return {
       if (id != null) 'id': id,
-      'name': name,
-      'email': email,
-      'phone': phone,
+      if (username != null) 'username': username,
+      if (role != null) 'role': role,
+      if (email != null) 'email': email,
+      if (phone != null) 'phone': phone,
     };
   }
-}
 
+  bool get isAdmin => role == 'ADMIN';
+}

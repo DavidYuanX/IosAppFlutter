@@ -13,27 +13,56 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _phoneController = TextEditingController();
   bool _loading = false;
+  bool _isRegister = false;
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
+  Future<void> _submit() async {
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
+    final phone = _phoneController.text.trim();
 
     if (username.isEmpty || password.isEmpty) {
       _showAlert('请输入用户名和密码');
       return;
     }
 
+    if (_isRegister) {
+      if (username.length < 3 || username.length > 20) {
+        _showAlert('用户名长度需在3-20个字符之间');
+        return;
+      }
+      if (password.length < 6) {
+        _showAlert('密码长度至少6个字符');
+        return;
+      }
+      if (password != _confirmPasswordController.text) {
+        _showAlert('两次输入的密码不一致');
+        return;
+      }
+      if (phone.isEmpty) {
+        _showAlert('请输入手机号');
+        return;
+      }
+    }
+
     setState(() => _loading = true);
     try {
-      await ApiService.instance.login(username, password);
+      if (_isRegister) {
+        await ApiService.instance.register(username, password, phone);
+      } else {
+        await ApiService.instance.login(username, password);
+      }
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const MainShell()),
@@ -64,6 +93,14 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  void _toggleMode() {
+    setState(() {
+      _isRegister = !_isRegister;
+      _confirmPasswordController.clear();
+      _phoneController.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -87,13 +124,15 @@ class _LoginPageState extends State<LoginPage> {
                     size: 40, color: colorScheme.onPrimaryContainer),
               ),
               const SizedBox(height: 16),
-              const Text(
-                '欢迎登录',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              Text(
+                _isRegister ? '创建账号' : '欢迎登录',
+                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              Text('登录后享受更多功能',
-                  style: TextStyle(color: colorScheme.outline)),
+              Text(
+                _isRegister ? '注册后享受更多功能' : '登录后享受更多功能',
+                style: TextStyle(color: colorScheme.outline),
+              ),
               const SizedBox(height: 32),
               TextField(
                 controller: _usernameController,
@@ -115,15 +154,42 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.circular(12)),
                 ),
                 obscureText: true,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _login(),
+                textInputAction: _isRegister ? TextInputAction.next : TextInputAction.done,
+                onSubmitted: _isRegister ? null : (_) => _submit(),
               ),
+              if (_isRegister) ...[
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _confirmPasswordController,
+                  decoration: InputDecoration(
+                    labelText: '确认密码',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  obscureText: true,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _phoneController,
+                  decoration: InputDecoration(
+                    labelText: '手机号',
+                    prefixIcon: const Icon(Icons.phone_outlined),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _submit(),
+                ),
+              ],
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 height: 48,
                 child: FilledButton(
-                  onPressed: _loading ? null : _login,
+                  onPressed: _loading ? null : _submit,
                   style: FilledButton.styleFrom(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
@@ -138,8 +204,23 @@ class _LoginPageState extends State<LoginPage> {
                                 AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
-                      : const Text('登录', style: TextStyle(fontSize: 18)),
+                      : Text(_isRegister ? '注册' : '登录',
+                          style: const TextStyle(fontSize: 18)),
                 ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _isRegister ? '已有账号？' : '没有账号？',
+                    style: TextStyle(color: colorScheme.outline),
+                  ),
+                  TextButton(
+                    onPressed: _toggleMode,
+                    child: Text(_isRegister ? '去登录' : '去注册'),
+                  ),
+                ],
               ),
             ],
           ),

@@ -6,8 +6,32 @@ import 'order_list_page.dart';
 import 'product_manage_page.dart';
 import 'user_list_page.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  String? _username;
+  bool _isAdmin = false;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    await ApiService.instance.isLoggedIn();
+    setState(() {
+      _username = ApiService.instance.currentUsername;
+      _isAdmin = ApiService.instance.isAdmin;
+      _loading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,13 +43,14 @@ class ProfilePage extends StatelessWidget {
         children: [
           _buildHeader(context, colorScheme),
           const SizedBox(height: 12),
-          _buildStatsRow(context, colorScheme),
-          const SizedBox(height: 12),
+          // _buildStatsRow(context, colorScheme), // 隐藏优惠券模块
           _buildOrderSection(context, colorScheme),
           const SizedBox(height: 12),
           _buildMenuSection(context, colorScheme),
-          const SizedBox(height: 12),
-          _buildAdminSection(context, colorScheme),
+          if (_isAdmin) ...[
+            const SizedBox(height: 12),
+            _buildAdminSection(context, colorScheme),
+          ],
           const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -48,6 +73,7 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, ColorScheme colorScheme) {
+    final username = _username ?? '用户';
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -102,8 +128,8 @@ class ProfilePage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Hi，用户',
-                            style: TextStyle(
+                        Text('Hi，$username',
+                            style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white)),
@@ -115,16 +141,21 @@ class ProfilePage extends StatelessWidget {
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.diamond_outlined,
-                                  size: 14, color: Colors.amberAccent),
-                              SizedBox(width: 4),
-                              Text('普通会员',
-                                  style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white70)),
+                              Icon(
+                                _isAdmin ? Icons.admin_panel_settings : Icons.diamond_outlined,
+                                size: 14,
+                                color: _isAdmin ? Colors.cyanAccent : Colors.amberAccent,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _isAdmin ? '管理员' : '普通会员',
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white70),
+                              ),
                             ],
                           ),
                         ),
