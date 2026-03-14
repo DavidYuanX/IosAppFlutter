@@ -6,5 +6,5 @@ class ApiConfig {
   ///
   /// 开发环境示例: 'http://192.168.22.58:8080'
   /// 生产环境示例: 'https://api.example.com'
-  static const String baseUrl = 'http://192.168.0.106:8080';
+  static const String baseUrl = 'http://192.168.22.58:8080';
 }

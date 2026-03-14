@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/api_service.dart';
+import 'address_list_page.dart';
 import 'browse_history_page.dart';
 import 'favorite_page.dart';
 import 'main_shell.dart';
@@ -337,7 +338,11 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         children: [
           _buildMenuItem(
-              context, Icons.location_on_outlined, Colors.blue, '收货地址'),
+              context, Icons.location_on_outlined, Colors.blue, '收货地址',
+              onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const AddressListPage()),
+                  )),
           _menuDivider(colorScheme),
           _buildMenuItem(
               context, Icons.favorite_border, Colors.pink, '我的收藏',

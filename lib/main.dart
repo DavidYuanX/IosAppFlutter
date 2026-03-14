@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'services/address_service.dart';
 import 'services/browse_history_service.dart';
 import 'services/favorite_service.dart';
 import 'screens/main_shell.dart';
@@ -7,6 +8,7 @@ import 'screens/main_shell.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Future.wait([
+    AddressService.instance.load(),
     BrowseHistoryService.instance.load(),
     FavoriteService.instance.load(),
   ]);

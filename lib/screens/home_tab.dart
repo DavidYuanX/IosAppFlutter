@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/product.dart';
 import '../services/product_service.dart';
+import '../widgets/paginated_product_list.dart';
 import 'product_detail_page.dart';
 import 'product_list_page.dart';
 
@@ -20,6 +21,7 @@ class _HomeTabState extends State<HomeTab> {
   ];
 
   late final PageController _pageController;
+  final _productListKey = GlobalKey<PaginatedProductListState>();
   int _currentBanner = 0;
 
   @override
@@ -51,6 +53,16 @@ class _HomeTabState extends State<HomeTab> {
     super.dispose();
   }
 
+  void _onScroll(ScrollNotification notification) {
+    if (notification is ScrollEndNotification) {
+      final maxScroll = notification.metrics.maxScrollExtent;
+      final currentScroll = notification.metrics.pixels;
+      if (maxScroll - currentScroll < 300) {
+        _productListKey.currentState?.loadPage();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,8 +85,7 @@ class _HomeTabState extends State<HomeTab> {
                 Text('搜索商品...',
                     style: TextStyle(
                         fontSize: 14,
-                        color:
-                            Theme.of(context).colorScheme.onSurfaceVariant)),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant)),
               ],
             ),
           ),
@@ -89,16 +100,27 @@ class _HomeTabState extends State<HomeTab> {
           future: ProductService.instance.fetchCategories(),
           builder: (context, catSnap) {
             final categories = catSnap.data ?? [];
-            return ListView(
-              children: [
-                _buildBanner(),
-                const SizedBox(height: 16),
-                if (categories.isNotEmpty) _buildCategoryGrid(categories),
-                const SizedBox(height: 16),
-                _buildSectionTitle('热门推荐'),
-                _buildProductSection(null),
-                const SizedBox(height: 80),
-              ],
+            return NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                _onScroll(notification);
+                return false;
+              },
+              child: ListView(
+                children: [
+                  _buildBanner(),
+                  const SizedBox(height: 16),
+                  if (categories.isNotEmpty) _buildCategoryGrid(categories),
+                  const SizedBox(height: 16),
+                  _buildSectionTitle('热门推荐'),
+                  _buildProductSection(null),
+                  if (_productListKey.currentState?.isLoading ?? false)
+                    const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  const SizedBox(height: 80),
+                ],
+              ),
             );
           },
         ),
@@ -152,9 +174,10 @@ class _HomeTabState extends State<HomeTab> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          childAspectRatio: 0.9,
-          crossAxisSpacing: 8,
+          crossAxisCount: 5,
+          childAspectRatio: 1.0,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
         ),
         itemCount: categories.length,
         itemBuilder: (context, index) {
@@ -171,8 +194,7 @@ class _HomeTabState extends State<HomeTab> {
             borderRadius: BorderRadius.circular(14),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
-                  builder: (_) =>
-                      ProductListPage(category: categories[index])),
+                  builder: (_) => ProductListPage(category: categories[index])),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -225,112 +247,14 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildProductSection(String? category) {
-    return FutureBuilder<List<Product>>(
-      future: ProductService.instance.fetchProducts(category: category),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const SizedBox(
-              height: 200,
-              child: Center(child: CircularProgressIndicator()));
-        }
-        final products = snapshot.data!;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 0.68,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-          ),
-          itemCount: products.length,
-          itemBuilder: (context, index) =>
-              _ProductCard(product: products[index]),
-        );
-      },
+    return PaginatedProductList(
+      key: _productListKey,
+      category: category,
     );
   }
 
   void _openSearch(BuildContext context) {
     showSearch(context: context, delegate: _ProductSearchDelegate());
-  }
-}
-
-class _ProductCard extends StatelessWidget {
-  final Product product;
-  const _ProductCard({required this.product});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-            builder: (_) => ProductDetailPage(product: product)),
-      ),
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        elevation: 1,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: Container(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: Image.network(
-                  product.imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Center(
-                    child: Icon(Icons.image,
-                        size: 48,
-                        color: Theme.of(context).colorScheme.outline),
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(product.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13)),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Text('¥${product.price.toStringAsFixed(0)}',
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.error)),
-                        const SizedBox(width: 4),
-                        if (product.originalPrice != null)
-                          Text(
-                            '¥${product.originalPrice!.toStringAsFixed(0)}',
-                            style: TextStyle(
-                                fontSize: 11,
-                                color: Theme.of(context).colorScheme.outline,
-                                decoration: TextDecoration.lineThrough),
-                          ),
-                      ],
-                    ),
-                    Text('已售 ${product.salesCount}',
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: Theme.of(context).colorScheme.outline)),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 

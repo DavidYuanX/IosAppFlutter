@@ -16,6 +16,23 @@ class ApiError implements Exception {
   String toString() => message;
 }
 
+/// 分页结果
+class PaginatedResult<T> {
+  final List<T> content;
+  final int totalElements;
+  final int totalPages;
+  final int pageNumber;
+  final bool last;
+
+  PaginatedResult({
+    required this.content,
+    required this.totalElements,
+    required this.totalPages,
+    required this.pageNumber,
+    required this.last,
+  });
+}
+
 class ApiService {
   ApiService._internal();
   static final ApiService instance = ApiService._internal();
@@ -225,12 +242,37 @@ class ApiService {
 
   // ---- Products ----
 
+  Future<PaginatedResult<Product>> fetchProductsPaginated({
+    String? category,
+    int page = 0,
+    int size = 20,
+  }) async {
+    final params = <String, String>{
+      'page': page.toString(),
+      'size': size.toString(),
+    };
+    if (category != null && category.isNotEmpty) {
+      params['category'] = category;
+    }
+    final uri = Uri.parse(_productsBaseUrl).replace(queryParameters: params);
+    final result = await _performRequest(uri) as Map<String, dynamic>;
+    return PaginatedResult<Product>(
+      content: (result['content'] as List<dynamic>)
+          .map((e) => Product.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      totalElements: result['totalElements'] as int,
+      totalPages: result['totalPages'] as int,
+      pageNumber: result['number'] as int,
+      last: result['last'] as bool,
+    );
+  }
+
   Future<List<Product>> fetchProducts({String? category}) async {
     final params = <String, String>{};
     if (category != null && category.isNotEmpty) {
       params['category'] = category;
     }
-    final uri = Uri.parse(_productsBaseUrl).replace(queryParameters: params.isEmpty ? null : params);
+    final uri = Uri.parse('$_productsBaseUrl/all').replace(queryParameters: params.isEmpty ? null : params);
     final result = await _performRequest(uri) as List<dynamic>;
     return result.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
   }
