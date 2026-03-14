@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../models/product.dart';
@@ -22,33 +24,31 @@ class _HomeTabState extends State<HomeTab> {
 
   late final PageController _pageController;
   final _productListKey = GlobalKey<PaginatedProductListState>();
+  Timer? _autoScrollTimer;
   int _currentBanner = 0;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
-    _autoScroll();
+    _startAutoScroll();
   }
 
-  void _autoScroll() {
-    Future.delayed(const Duration(seconds: 4), () {
-      if (!mounted || !_pageController.hasClients) {
-        _autoScroll();
-        return;
-      }
+  void _startAutoScroll() {
+    _autoScrollTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted || !_pageController.hasClients) return;
       final next = (_currentBanner + 1) % _banners.length;
       _pageController.animateToPage(
         next,
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
-      _autoScroll();
     });
   }
 
   @override
   void dispose() {
+    _autoScrollTimer?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -174,10 +174,10 @@ class _HomeTabState extends State<HomeTab> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 5,
-          childAspectRatio: 1.0,
-          crossAxisSpacing: 4,
-          mainAxisSpacing: 4,
+          crossAxisCount: 4,
+          childAspectRatio: 0.9,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
         ),
         itemCount: categories.length,
         itemBuilder: (context, index) {

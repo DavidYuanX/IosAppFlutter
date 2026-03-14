@@ -62,4 +62,4 @@ else
 fi
 
 echo "=== 启动 Flutter 应用 ==="
-flutter run -d macos
+flutter run -d Chrome

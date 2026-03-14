@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import '../models/product.dart';
 import '../services/api_service.dart';
@@ -135,17 +136,16 @@ class PaginatedProductListState extends State<PaginatedProductList> {
       );
     }
 
-    return GridView.builder(
+    return MasonryGridView.count(
       controller: widget.scrollable ? _scrollController : null,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.68,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
+      shrinkWrap: !widget.scrollable,
+      physics: widget.scrollable
+          ? const AlwaysScrollableScrollPhysics()
+          : const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(12),
+      crossAxisCount: 2,
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
       itemCount: _products.length,
       itemBuilder: (context, index) => _ProductCard(product: _products[index]),
     );
@@ -169,55 +169,54 @@ class _ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: Container(
+            Image.network(
+              product.imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                height: 120,
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: Image.network(
-                  product.imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Center(
-                    child: Icon(Icons.image,
-                        size: 48, color: Theme.of(context).colorScheme.outline),
-                  ),
+                child: Center(
+                  child: Icon(Icons.image,
+                      size: 48, color: Theme.of(context).colorScheme.outline),
                 ),
               ),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(product.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13)),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Text('¥${product.price.toStringAsFixed(0)}',
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.error)),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(product.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13, height: 1.3)),
+                  const SizedBox(height: 6),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('¥${product.price.toStringAsFixed(0)}',
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.error)),
+                      if (product.originalPrice != null) ...[
                         const SizedBox(width: 4),
-                        if (product.originalPrice != null)
-                          Text(
-                            '¥${product.originalPrice!.toStringAsFixed(0)}',
-                            style: TextStyle(
-                                fontSize: 11,
-                                color: Theme.of(context).colorScheme.outline,
-                                decoration: TextDecoration.lineThrough),
-                          ),
+                        Text(
+                          '¥${product.originalPrice!.toStringAsFixed(0)}',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: Theme.of(context).colorScheme.outline,
+                              decoration: TextDecoration.lineThrough),
+                        ),
                       ],
-                    ),
-                    Text('已售 ${product.salesCount}',
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: Theme.of(context).colorScheme.outline)),
-                  ],
-                ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text('已售 ${product.salesCount}',
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: Theme.of(context).colorScheme.outline)),
+                ],
               ),
             ),
           ],
