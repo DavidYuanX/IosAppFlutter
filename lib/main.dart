@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 
+import 'services/browse_history_service.dart';
+import 'services/favorite_service.dart';
 import 'screens/main_shell.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Future.wait([
+    BrowseHistoryService.instance.load(),
+    FavoriteService.instance.load(),
+  ]);
   runApp(const CrudApp());
 }
 

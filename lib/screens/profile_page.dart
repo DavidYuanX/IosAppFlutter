@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../services/api_service.dart';
+import 'browse_history_page.dart';
+import 'favorite_page.dart';
 import 'main_shell.dart';
 import 'order_list_page.dart';
 import 'product_manage_page.dart';
@@ -338,9 +340,17 @@ class _ProfilePageState extends State<ProfilePage> {
               context, Icons.location_on_outlined, Colors.blue, '收货地址'),
           _menuDivider(colorScheme),
           _buildMenuItem(
-              context, Icons.favorite_border, Colors.pink, '我的收藏'),
+              context, Icons.favorite_border, Colors.pink, '我的收藏',
+              onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const FavoritePage()),
+                  )),
           _menuDivider(colorScheme),
-          _buildMenuItem(context, Icons.history, Colors.orange, '浏览记录'),
+          _buildMenuItem(context, Icons.history, Colors.orange, '浏览记录',
+              onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const BrowseHistoryPage()),
+                  )),
           _menuDivider(colorScheme),
           _buildMenuItem(
               context, Icons.headset_mic_outlined, Colors.teal, '客服中心'),

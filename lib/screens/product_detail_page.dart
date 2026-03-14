@@ -3,17 +3,62 @@ import 'package:flutter/material.dart';
 import '../models/order.dart' as order_model;
 import '../models/product.dart';
 import '../services/api_service.dart';
+import '../services/browse_history_service.dart';
 import '../services/cart_service.dart';
+import '../services/favorite_service.dart';
 import 'login_page.dart';
 import 'main_shell.dart';
 import 'order_detail_page.dart';
 
-class ProductDetailPage extends StatelessWidget {
+class ProductDetailPage extends StatefulWidget {
   final Product product;
   const ProductDetailPage({super.key, required this.product});
 
   @override
+  State<ProductDetailPage> createState() => _ProductDetailPageState();
+}
+
+class _ProductDetailPageState extends State<ProductDetailPage> {
+  bool _isFavorite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // 记录浏览历史
+    BrowseHistoryService.instance.add(widget.product);
+    // 检查收藏状态
+    _isFavorite = FavoriteService.instance.isFavorite(widget.product.id!);
+    // 监听收藏变化
+    FavoriteService.instance.addListener(_onFavoriteChanged);
+  }
+
+  @override
+  void dispose() {
+    FavoriteService.instance.removeListener(_onFavoriteChanged);
+    super.dispose();
+  }
+
+  void _onFavoriteChanged() {
+    setState(() {
+      _isFavorite = FavoriteService.instance.isFavorite(widget.product.id!);
+    });
+  }
+
+  Future<void> _toggleFavorite() async {
+    final isFav = await FavoriteService.instance.toggle(widget.product);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isFav ? '已添加到收藏' : '已取消收藏'),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final product = widget.product;
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       body: CustomScrollView(
@@ -21,6 +66,18 @@ class ProductDetailPage extends StatelessWidget {
           SliverAppBar(
             expandedHeight: 320,
             pinned: true,
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: IconButton(
+                  icon: Icon(
+                    _isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: _isFavorite ? colorScheme.error : null,
+                  ),
+                  onPressed: _toggleFavorite,
+                ),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 color: colorScheme.surfaceContainerHighest,
@@ -137,7 +194,7 @@ class ProductDetailPage extends StatelessWidget {
             color: colorScheme.surface,
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, -2)),
             ],
