@@ -324,8 +324,23 @@ class _OrderCard extends StatelessWidget {
     switch (order.status) {
       case '待付款':
         actions = [
-          _ActionButton(label: '取消订单', filled: false, onTap: () {}),
-          _ActionButton(label: '去付款', filled: true, onTap: () {}),
+          _ActionButton(
+            label: '取消订单',
+            filled: false,
+            onTap: () => _cancelOrder(context, order.id!, onChanged),
+          ),
+          _ActionButton(
+            label: '去付款',
+            filled: true,
+            onTap: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => OrderDetailPage(orderId: order.id!),
+                ),
+              );
+              onChanged();
+            },
+          ),
         ];
         break;
       case '待收货':
@@ -350,6 +365,37 @@ class _OrderCard extends StatelessWidget {
           ..removeLast(),
       ),
     );
+  }
+
+  Future<void> _cancelOrder(
+      BuildContext context, int orderId, VoidCallback onChanged) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('取消订单'),
+        content: const Text('确定要取消此订单吗？'),
+        actions: [
+          TextButton(
+            child: const Text('返回'),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+          TextButton(
+            child: const Text('取消订单'),
+            onPressed: () => Navigator.of(context).pop(true),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ApiService.instance.cancelOrder(orderId);
+      onChanged();
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('取消失败: $e')),
+      );
+    }
   }
 }
 
