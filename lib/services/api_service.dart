@@ -320,8 +320,9 @@ class ApiService {
     final uri = Uri.parse('$_productsBaseUrl/search').replace(
       queryParameters: {'keyword': keyword},
     );
-    final result = await _performRequest(uri) as List<dynamic>;
-    return result.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
+    final result = await _performRequest(uri) as Map<String, dynamic>;
+    final content = result['content'] as List<dynamic>;
+    return content.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   // ---- Orders ----
