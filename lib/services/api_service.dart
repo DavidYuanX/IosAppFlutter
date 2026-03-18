@@ -7,6 +7,7 @@ import '../config/api_config.dart';
 import '../models/order.dart' as order_model;
 import '../models/product.dart';
 import '../models/user.dart';
+import '../models/banner.dart';
 
 class ApiError implements Exception {
   final String message;
@@ -42,6 +43,7 @@ class ApiService {
   String get _authBaseUrl => '$_baseHost/api/auth';
   String get _productsBaseUrl => '$_baseHost/api/products';
   String get _ordersBaseUrl => '$_baseHost/api/orders';
+  String get _bannersBaseUrl => '$_baseHost/api/banners';
 
   static const _tokenKey = 'auth_token';
   static const _usernameKey = 'auth_username';
@@ -370,6 +372,47 @@ class ApiService {
 
   Future<void> cancelOrder(int id) async {
     final uri = Uri.parse('$_ordersBaseUrl/$id');
+    await _performRequest(uri, method: 'DELETE', decodeJson: false);
+  }
+
+  // ---- Banners ----
+
+  Future<List<Banner>> fetchBanners() async {
+    final uri = Uri.parse(_bannersBaseUrl);
+    final result = await _performRequest(uri) as List<dynamic>;
+    return result.map((e) => Banner.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<Banner>> fetchAllBanners() async {
+    final uri = Uri.parse('$_bannersBaseUrl/all');
+    final result = await _performRequest(uri) as List<dynamic>;
+    return result.map((e) => Banner.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<Banner> createBanner(Banner banner) async {
+    final uri = Uri.parse(_bannersBaseUrl);
+    final result = await _performRequest(
+      uri,
+      method: 'POST',
+      body: banner.toJson(),
+    ) as Map<String, dynamic>;
+    return Banner.fromJson(result);
+  }
+
+  Future<Banner> updateBanner(Banner banner) async {
+    final id = banner.id;
+    if (id == null) throw ApiError('Banner ID 为空');
+    final uri = Uri.parse('$_bannersBaseUrl/$id');
+    final result = await _performRequest(
+      uri,
+      method: 'PUT',
+      body: banner.toJson(),
+    ) as Map<String, dynamic>;
+    return Banner.fromJson(result);
+  }
+
+  Future<void> deleteBanner(int id) async {
+    final uri = Uri.parse('$_bannersBaseUrl/$id');
     await _performRequest(uri, method: 'DELETE', decodeJson: false);
   }
 }

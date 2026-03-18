@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/api_service.dart';
 import 'address_list_page.dart';
+import 'banner_manage_page.dart';
 import 'browse_history_page.dart';
 import 'favorite_page.dart';
 import 'main_shell.dart';
@@ -413,6 +414,13 @@ class _ProfilePageState extends State<ProfilePage> {
               onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                         builder: (_) => const ProductManagePage()),
+                  )),
+          _menuDivider(colorScheme),
+          _buildMenuItem(
+              context, Icons.view_carousel_outlined, Colors.purple, 'Banner管理',
+              onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const BannerManagePage()),
                   )),
         ],
       ),

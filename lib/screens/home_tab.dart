@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../models/product.dart';
+import '../models/banner.dart' as banner_model;
 import '../services/product_service.dart';
+import '../services/api_service.dart';
 import '../widgets/paginated_product_list.dart';
 import 'product_detail_page.dart';
 import 'product_list_page.dart';
@@ -16,11 +18,7 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  final _banners = const [
-    {'color': Color(0xFF1a1a2e), 'text': '春季大促  全场低至5折'},
-    {'color': Color(0xFF16213e), 'text': '数码新品  限时特惠'},
-    {'color': Color(0xFF0f3460), 'text': '每日坚果  买二送一'},
-  ];
+  List<banner_model.Banner> _banners = [];
 
   late final PageController _pageController;
   final _productListKey = GlobalKey<PaginatedProductListState>();
@@ -31,7 +29,30 @@ class _HomeTabState extends State<HomeTab> {
   void initState() {
     super.initState();
     _pageController = PageController();
+    _loadBanners();
     _startAutoScroll();
+  }
+
+  Future<void> _loadBanners() async {
+    try {
+      final banners = await ApiService.instance.fetchBanners();
+      if (mounted) {
+        setState(() {
+          _banners = banners;
+        });
+      }
+    } catch (_) {
+      // 使用默认banner
+      if (mounted) {
+        setState(() {
+          _banners = [
+            banner_model.Banner(title: '春季大促  全场低至5折', backgroundColor: '#1a1a2e'),
+            banner_model.Banner(title: '数码新品  限时特惠', backgroundColor: '#16213e'),
+            banner_model.Banner(title: '每日坚果  买二送一', backgroundColor: '#0f3460'),
+          ];
+        });
+      }
+    }
   }
 
   void _startAutoScroll() {
@@ -129,6 +150,9 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildBanner() {
+    if (_banners.isEmpty) {
+      return const SizedBox(height: 160);
+    }
     return SizedBox(
       height: 160,
       child: PageView.builder(
@@ -137,15 +161,16 @@ class _HomeTabState extends State<HomeTab> {
         itemCount: _banners.length,
         itemBuilder: (context, index) {
           final banner = _banners[index];
+          final bgColor = _parseColor(banner.backgroundColor);
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: banner['color'] as Color,
+              color: bgColor,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Center(
               child: Text(
-                banner['text'] as String,
+                banner.title,
                 style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,
@@ -156,6 +181,18 @@ class _HomeTabState extends State<HomeTab> {
         },
       ),
     );
+  }
+
+  Color _parseColor(String? hexColor) {
+    if (hexColor == null || hexColor.isEmpty) {
+      return const Color(0xFF1a1a2e);
+    }
+    try {
+      final hex = hexColor.replaceFirst('#', '');
+      return Color(int.parse('FF$hex', radix: 16));
+    } catch (_) {
+      return const Color(0xFF1a1a2e);
+    }
   }
 
   Widget _buildCategoryGrid(List<String> categories) {
