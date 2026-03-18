@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'services/address_service.dart';
+import 'services/api_service.dart';
 import 'services/browse_history_service.dart';
 import 'services/favorite_service.dart';
 import 'screens/main_shell.dart';
@@ -23,6 +24,7 @@ class CrudApp extends StatelessWidget {
     return MaterialApp(
       title: 'CRUD App',
       debugShowCheckedModeBanner: false,
+      navigatorKey: ApiService.instance.navigatorKey,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -7,11 +8,14 @@ import '../config/api_config.dart';
 import '../models/order.dart' as order_model;
 import '../models/product.dart';
 import '../models/user.dart';
-import '../models/banner.dart';
+import '../models/banner.dart' as banner_model;
+import '../screens/main_shell.dart';
 
 class ApiError implements Exception {
   final String message;
-  ApiError(this.message);
+  final bool isAuthError;
+
+  ApiError(this.message, {this.isAuthError = false});
 
   @override
   String toString() => message;
@@ -37,6 +41,9 @@ class PaginatedResult<T> {
 class ApiService {
   ApiService._internal();
   static final ApiService instance = ApiService._internal();
+
+  /// 全局导航器Key，用于认证失败时跳转登录页
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   final String _baseHost = ApiConfig.baseUrl;
   String get _usersBaseUrl => '$_baseHost/api/users';
@@ -92,6 +99,26 @@ class ApiService {
     await _saveAuth(null);
   }
 
+  /// 处理认证失败：清除登录状态并跳转到主页（触发登录流程）
+  void _handleAuthError() {
+    final context = navigatorKey.currentContext;
+    if (context != null) {
+      // 显示提示
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('登录已过期，请重新登录'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      // 跳转到主页，触发登录检查
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainShell()),
+        (route) => false,
+      );
+    }
+  }
+
   Future<Map<String, String>> _headers({bool useAuth = true}) async {
     if (useAuth && _token == null) {
       await _loadToken();
@@ -138,7 +165,8 @@ class ApiService {
     final statusCode = response.statusCode;
     if (statusCode == 401) {
       await logout();
-      throw ApiError('用户名或密码错误，请重试');
+      _handleAuthError();
+      throw ApiError('登录已过期，请重新登录', isAuthError: true);
     }
     if (statusCode < 200 || statusCode >= 300) {
       throw ApiError('服务器错误: $statusCode');
@@ -377,29 +405,29 @@ class ApiService {
 
   // ---- Banners ----
 
-  Future<List<Banner>> fetchBanners() async {
+  Future<List<banner_model.Banner>> fetchBanners() async {
     final uri = Uri.parse(_bannersBaseUrl);
     final result = await _performRequest(uri) as List<dynamic>;
-    return result.map((e) => Banner.fromJson(e as Map<String, dynamic>)).toList();
+    return result.map((e) => banner_model.Banner.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  Future<List<Banner>> fetchAllBanners() async {
+  Future<List<banner_model.Banner>> fetchAllBanners() async {
     final uri = Uri.parse('$_bannersBaseUrl/all');
     final result = await _performRequest(uri) as List<dynamic>;
-    return result.map((e) => Banner.fromJson(e as Map<String, dynamic>)).toList();
+    return result.map((e) => banner_model.Banner.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  Future<Banner> createBanner(Banner banner) async {
+  Future<banner_model.Banner> createBanner(banner_model.Banner banner) async {
     final uri = Uri.parse(_bannersBaseUrl);
     final result = await _performRequest(
       uri,
       method: 'POST',
       body: banner.toJson(),
     ) as Map<String, dynamic>;
-    return Banner.fromJson(result);
+    return banner_model.Banner.fromJson(result);
   }
 
-  Future<Banner> updateBanner(Banner banner) async {
+  Future<banner_model.Banner> updateBanner(banner_model.Banner banner) async {
     final id = banner.id;
     if (id == null) throw ApiError('Banner ID 为空');
     final uri = Uri.parse('$_bannersBaseUrl/$id');
@@ -408,7 +436,7 @@ class ApiService {
       method: 'PUT',
       body: banner.toJson(),
     ) as Map<String, dynamic>;
-    return Banner.fromJson(result);
+    return banner_model.Banner.fromJson(result);
   }
 
   Future<void> deleteBanner(int id) async {
