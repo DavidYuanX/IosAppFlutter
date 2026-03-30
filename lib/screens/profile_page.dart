@@ -20,7 +20,6 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   String? _username;
   bool _isAdmin = false;
-  bool _loading = true;
 
   @override
   void initState() {
@@ -33,7 +32,6 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {
       _username = ApiService.instance.currentUsername;
       _isAdmin = ApiService.instance.isAdmin;
-      _loading = false;
     });
   }
 
@@ -58,14 +56,15 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: OutlinedButton(
-              onPressed: () => _logout(context),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: colorScheme.error,
-                side: BorderSide(color: colorScheme.error.withOpacity(0.3)),
-                minimumSize: const Size(double.infinity, 48),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24)),
+                child: OutlinedButton(
+                  onPressed: () => _logout(context),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colorScheme.error,
+                    side: BorderSide(
+                        color: colorScheme.error.withValues(alpha: 0.3)),
+                    minimumSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24)),
               ),
               child: const Text('退出登录', style: TextStyle(fontSize: 15)),
             ),
@@ -83,7 +82,7 @@ class _ProfilePageState extends State<ProfilePage> {
         gradient: LinearGradient(
           colors: [
             colorScheme.primary,
-            colorScheme.primary.withOpacity(0.75),
+            colorScheme.primary.withValues(alpha: 0.75),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -111,10 +110,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border:
-                          Border.all(color: Colors.white.withOpacity(0.3), width: 3),
+                          Border.all(color: Colors.white.withValues(alpha: 0.3), width: 3),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
+                          color: Colors.black.withValues(alpha: 0.15),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -122,7 +121,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     child: CircleAvatar(
                       radius: 36,
-                      backgroundColor: Colors.white.withOpacity(0.2),
+                      backgroundColor: Colors.white.withValues(alpha: 0.2),
                       child: const Icon(Icons.person,
                           size: 38, color: Colors.white),
                     ),
@@ -142,7 +141,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 3),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -179,60 +178,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildStatsRow(BuildContext context, ColorScheme colorScheme) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 14),
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _statItem('优惠券', '3', colorScheme),
-          _divider(colorScheme),
-          _statItem('积分', '1280', colorScheme),
-          _divider(colorScheme),
-          _statItem('余额', '¥0', colorScheme),
-          _divider(colorScheme),
-          _statItem('会员', 'Lv.1', colorScheme),
-        ],
-      ),
-    );
-  }
-
-  Widget _statItem(String label, String value, ColorScheme colorScheme) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(value,
-            style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface)),
-        const SizedBox(height: 4),
-        Text(label,
-            style: TextStyle(fontSize: 12, color: colorScheme.outline)),
-      ],
-    );
-  }
-
-  Widget _divider(ColorScheme colorScheme) {
-    return Container(
-      width: 1,
-      height: 28,
-      color: colorScheme.outline.withOpacity(0.1),
-    );
-  }
-
   Widget _buildOrderSection(BuildContext context, ColorScheme colorScheme) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 14),
@@ -242,7 +187,7 @@ class _ProfilePageState extends State<ProfilePage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -310,7 +255,7 @@ class _ProfilePageState extends State<ProfilePage> {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.08),
+              color: color.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, size: 22, color: color),
@@ -330,7 +275,7 @@ class _ProfilePageState extends State<ProfilePage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -369,7 +314,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Divider(
       height: 0,
       indent: 56,
-      color: colorScheme.outline.withOpacity(0.08),
+      color: colorScheme.outline.withValues(alpha: 0.08),
     );
   }
 
@@ -381,7 +326,7 @@ class _ProfilePageState extends State<ProfilePage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -435,7 +380,7 @@ class _ProfilePageState extends State<ProfilePage> {
         width: 34,
         height: 34,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, size: 18, color: color),

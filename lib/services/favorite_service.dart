@@ -15,7 +15,7 @@ class FavoriteService {
   static const _maxCount = 100; // 最多保存100条记录
 
   List<Product> _favorites = [];
-  List<VoidCallback> _listeners = [];
+  final List<VoidCallback> _listeners = [];
 
   List<Product> get favorites => List.unmodifiable(_favorites);
 

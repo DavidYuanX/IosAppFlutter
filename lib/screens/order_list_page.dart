@@ -136,7 +136,7 @@ class _OrderTabViewState extends State<_OrderTabView>
               color: Theme.of(context)
                   .colorScheme
                   .surfaceContainerHighest
-                  .withOpacity(0.5),
+                  .withValues(alpha: 0.5),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.receipt_long_outlined,
@@ -152,7 +152,7 @@ class _OrderTabViewState extends State<_OrderTabView>
               style: TextStyle(
                   fontSize: 13,
                   color:
-                      Theme.of(context).colorScheme.outline.withOpacity(0.6))),
+                      Theme.of(context).colorScheme.outline.withValues(alpha: 0.6))),
         ],
       ),
     );
@@ -174,7 +174,7 @@ class _OrderCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -308,7 +308,7 @@ class _OrderCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text('x${item.quantity}',
@@ -431,7 +431,7 @@ class _ActionButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           textStyle: const TextStyle(fontSize: 13),
-          side: BorderSide(color: colorScheme.outline.withOpacity(0.3)),
+          side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.3)),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
@@ -458,7 +458,7 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(

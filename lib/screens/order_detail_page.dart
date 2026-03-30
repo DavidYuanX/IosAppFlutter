@@ -108,7 +108,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             background: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [statusColor, statusColor.withOpacity(0.7)],
+                  colors: [statusColor, statusColor.withValues(alpha: 0.7)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -134,7 +134,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                       const SizedBox(height: 4),
                       Text(statusHint,
                           style: TextStyle(
-                              color: Colors.white.withOpacity(0.85),
+                              color: Colors.white.withValues(alpha: 0.85),
                               fontSize: 13)),
                     ],
                   ),
@@ -177,7 +177,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 2)),
         ],
@@ -195,7 +195,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                     : Theme.of(context)
                         .colorScheme
                         .outline
-                        .withOpacity(0.15),
+                        .withValues(alpha: 0.15),
               ),
             );
           }
@@ -215,7 +215,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                       : Theme.of(context)
                           .colorScheme
                           .outline
-                          .withOpacity(0.15),
+                          .withValues(alpha: 0.15),
                 ),
                 child: done
                     ? Icon(
@@ -247,7 +247,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 2)),
         ],
@@ -320,7 +320,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                                     horizontal: 10, vertical: 3),
                                 decoration: BoxDecoration(
                                   color: colorScheme.surfaceContainerHighest
-                                      .withOpacity(0.5),
+                                      .withValues(alpha: 0.5),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text('x${item.quantity}',
@@ -352,7 +352,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 2)),
         ],
@@ -404,7 +404,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 2)),
         ],

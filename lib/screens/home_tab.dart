@@ -240,7 +240,7 @@ class _HomeTabState extends State<HomeTab> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.08),
+                    color: color.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(icon, size: 24, color: color),

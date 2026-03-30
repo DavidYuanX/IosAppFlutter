@@ -75,7 +75,6 @@ class _AddressEditPageState extends State<AddressEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? '编辑地址' : '新增地址'),

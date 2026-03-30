@@ -14,7 +14,7 @@ class AddressService {
   static int _nextId = 1;
 
   List<Address> _addresses = [];
-  List<VoidCallback> _listeners = [];
+  final List<VoidCallback> _listeners = [];
 
   List<Address> get addresses => List.unmodifiable(_addresses);
 

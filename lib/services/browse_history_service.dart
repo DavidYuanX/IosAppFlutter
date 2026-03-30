@@ -15,7 +15,7 @@ class BrowseHistoryService {
   static const _maxCount = 50; // 最多保存50条记录
 
   List<Product> _history = [];
-  List<VoidCallback> _listeners = [];
+  final List<VoidCallback> _listeners = [];
 
   List<Product> get history => List.unmodifiable(_history);
 

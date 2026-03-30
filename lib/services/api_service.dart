@@ -166,16 +166,46 @@ class ApiService {
     if (statusCode == 401) {
       await logout();
       _handleAuthError();
-      throw ApiError('登录已过期，请重新登录', isAuthError: true);
+      throw ApiError(_extractErrorMessage(response) ?? '登录已过期，请重新登录',
+          isAuthError: true);
     }
     if (statusCode < 200 || statusCode >= 300) {
-      throw ApiError('服务器错误: $statusCode');
+      throw ApiError(_extractErrorMessage(response) ?? '服务器错误: $statusCode');
     }
 
     if (!decodeJson || response.body.isEmpty) {
       return null;
     }
     return jsonDecode(response.body);
+  }
+
+  String? _extractErrorMessage(http.Response response) {
+    final body = response.body;
+    if (body.isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map<String, dynamic>) {
+        final error = decoded['error'];
+        if (error is String && error.trim().isNotEmpty) {
+          return error.trim();
+        }
+
+        final message = decoded['message'];
+        if (message is String && message.trim().isNotEmpty) {
+          return message.trim();
+        }
+      }
+    } catch (_) {
+      final trimmed = body.trim();
+      if (trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+
+    return null;
   }
 
   Future<void> login(String username, String password) async {
@@ -444,4 +474,3 @@ class ApiService {
     await _performRequest(uri, method: 'DELETE', decodeJson: false);
   }
 }
-
